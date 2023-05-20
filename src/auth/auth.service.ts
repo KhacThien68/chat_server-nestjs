@@ -19,7 +19,7 @@ export class AuthService {
     private jwt: JwtService,
   ) {}
 
-  async signup(dto: SignupDto) {
+  async signup(dto: SignupDto): Promise<Token> {
     // save the password
     const hash = await argon.hash(dto.password);
 

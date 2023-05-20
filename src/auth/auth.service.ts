@@ -69,6 +69,20 @@ export class AuthService {
     return token;
   }
 
+  async logout(userId) {
+    await this.prisma.user.updateMany({
+      where: {
+        id: userId,
+        hashRt: {
+          not: null,
+        },
+      },
+      data: {
+        hashRt: null,
+      },
+    });
+  }
+
   async signToken(userId: number, email: string): Promise<Token> {
     const payload = {
       sub: userId,
@@ -101,20 +115,4 @@ export class AuthService {
       },
     });
   }
-
-  verifyToken = async (token: string) => {
-    try {
-      const payload = this.jwt.verify(token);
-      const { userId } = payload;
-
-      const user = await this.prisma.user.findUnique({ where: { id: userId } });
-      if (!user) {
-        throw new UnauthorizedException('Token is invalid');
-      }
-
-      return payload;
-    } catch (e) {
-      throw new UnauthorizedException('Token is invalid');
-    }
-  };
 }

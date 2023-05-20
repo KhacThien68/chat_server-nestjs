@@ -34,12 +34,17 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  logout(@GetUser() user: User) {
-    return this.authService.logout(user['id']);
+  logout(@GetUser('sub') userId: number) {
+    return this.authService.logout(userId);
   }
 
   @UseGuards(AuthGuard('jwt-refresh'))
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  refreshToken(@Req() req: Request) {}
+  refreshToken(
+    @GetUser('sub') userId: number,
+    @GetUser('refreshToken') rt: string,
+  ) {
+    return this.authService.refreshToken(userId, rt);
+  }
 }

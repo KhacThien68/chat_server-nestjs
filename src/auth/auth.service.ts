@@ -10,6 +10,7 @@ import * as argon from 'argon2';
 import { Prisma, User } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { Token } from './entities';
+import { log } from 'console';
 
 @Injectable()
 export class AuthService {
@@ -83,6 +84,23 @@ export class AuthService {
     });
   }
 
+  async refreshToken(userId: number, rt: string) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+    if (!user) throw new ForbiddenException('Access denied');
+    console.log(user);
+    console.log(rt);
+
+    const rtMatches = await argon.verify(user.hashRt, rt);
+    if (!rtMatches) throw new ForbiddenException('Access denied');
+
+    const token = this.signToken(user.id, user.email);
+    await this.updateRtHash(user.id, (await token).refreshToken);
+    return token;
+  }
   async signToken(userId: number, email: string): Promise<Token> {
     const payload = {
       sub: userId,

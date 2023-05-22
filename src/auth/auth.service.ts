@@ -1,16 +1,11 @@
-import {
-  ForbiddenException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SigninDto, SignupDto } from './dto';
 import { ConfigService } from '@nestjs/config';
 import * as argon from 'argon2';
-import { Prisma, User } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { Token } from './entities';
-import { log } from 'console';
 
 @Injectable()
 export class AuthService {
@@ -62,7 +57,7 @@ export class AuthService {
     const pwMatches = await argon.verify(user.hash, dto.password);
     // if the passwword incorrect, throw exception
     if (!pwMatches) {
-      throw new ForbiddenException('Password is incorrect');
+      throw new ForbiddenException('Email or Password is incorrect');
     }
 
     const token = this.signToken(user.id, user.email);
@@ -91,8 +86,6 @@ export class AuthService {
       },
     });
     if (!user) throw new ForbiddenException('Access denied');
-    console.log(user);
-    console.log(rt);
 
     const rtMatches = await argon.verify(user.hashRt, rt);
     if (!rtMatches) throw new ForbiddenException('Access denied');

@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SigninDto, SignupDto } from './dto';
 import { ConfigService } from '@nestjs/config';
@@ -6,6 +6,7 @@ import * as argon from 'argon2';
 import { Prisma } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { Token } from './entities';
+import { AuthResponse } from './response/auth.response';
 
 @Injectable()
 export class AuthService {
@@ -15,7 +16,7 @@ export class AuthService {
     private jwt: JwtService,
   ) {}
 
-  async signup(dto: SignupDto): Promise<Token> {
+  async signup(dto: SignupDto): Promise<AuthResponse> {
     // save the password
     const hash = await argon.hash(dto.password);
 
@@ -31,7 +32,11 @@ export class AuthService {
       // return token
       const token = this.signToken(user.id, user.email);
       await this.updateRtHash(user.id, (await token).refreshToken);
-      return token;
+      return {
+        token: token,
+        status: HttpStatus.CREATED,
+        user: user,
+      };
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError) {
         if (err.code === 'P2002') {
@@ -42,7 +47,7 @@ export class AuthService {
     }
   }
 
-  async signin(dto: SigninDto): Promise<Token> {
+  async signin(dto: SigninDto): Promise<AuthResponse> {
     // find the user by email
     const user = await this.prisma.user.findUnique({
       where: {
@@ -62,7 +67,11 @@ export class AuthService {
 
     const token = this.signToken(user.id, user.email);
     await this.updateRtHash(user.id, (await token).refreshToken);
-    return token;
+    return {
+      token: token,
+      status: HttpStatus.CREATED,
+      user: user,
+    }
   }
 
   async logout(userId) {

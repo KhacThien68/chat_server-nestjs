@@ -11,6 +11,7 @@ import { SigninDto, SignupDto } from './dto';
 import { Token } from './entities';
 import { GetUser, Public } from './decorator';
 import { AtGuard, RtGuard } from './guard';
+import { AuthResponse } from './response/auth.response';
 
 @Controller('auth')
 export class AuthController {
@@ -19,14 +20,14 @@ export class AuthController {
   @Public()
   @Post('signup')
   @HttpCode(HttpStatus.CREATED)
-  signup(@Body() dto: SignupDto): Promise<Token> {
+  signup(@Body() dto: SignupDto): Promise<AuthResponse> {
     return this.authService.signup(dto);
   }
 
   @Public()
   @Post('signin')
   @HttpCode(HttpStatus.OK)
-  signin(@Body() dto: SigninDto): Promise<Token> {
+  signin(@Body() dto: SigninDto): Promise<AuthResponse> {
     return this.authService.signin(dto);
   }
 

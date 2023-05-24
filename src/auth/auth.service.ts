@@ -30,8 +30,8 @@ export class AuthService {
       });
 
       // return token
-      const token = this.signToken(user.id, user.email);
-      await this.updateRtHash(user.id, (await token).refreshToken);
+      const token = await this.signToken(user.id, user.email);
+      await this.updateRtHash(user.id, token.refreshToken);
       return {
         token: token,
         status: HttpStatus.CREATED,
@@ -65,13 +65,18 @@ export class AuthService {
       throw new ForbiddenException('Email or Password is incorrect');
     }
 
-    const token = this.signToken(user.id, user.email);
-    await this.updateRtHash(user.id, (await token).refreshToken);
+    const token = await this.signToken(user.id, user.email);
+    console.log(token);
+    await this.updateRtHash(user.id, token.refreshToken);
+    delete user.hash;
+    delete user.hashRt;
+    delete user.createdAt;
+    delete user.updatedAt;
     return {
       token: token,
-      status: HttpStatus.CREATED,
+      status: HttpStatus.OK,
       user: user,
-    }
+    };
   }
 
   async logout(userId) {
@@ -99,8 +104,8 @@ export class AuthService {
     const rtMatches = await argon.verify(user.hashRt, rt);
     if (!rtMatches) throw new ForbiddenException('Access denied');
 
-    const token = this.signToken(user.id, user.email);
-    await this.updateRtHash(user.id, (await token).refreshToken);
+    const token = await this.signToken(user.id, user.email);
+    await this.updateRtHash(user.id, token.refreshToken);
     return token;
   }
   async signToken(userId: number, email: string): Promise<Token> {

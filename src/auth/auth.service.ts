@@ -34,6 +34,10 @@ export class AuthService {
       // return token
       const token = await this.signToken(user.id, user.email);
       await this.updateRtHash(user.id, token.refreshToken);
+      delete user.hash;
+      delete user.hashRt;
+      delete user.createdAt;
+      delete user.updatedAt;
       return {
         token: token,
         status: HttpStatus.CREATED,
@@ -68,7 +72,6 @@ export class AuthService {
     }
 
     const token = await this.signToken(user.id, user.email);
-    console.log(token);
     await this.updateRtHash(user.id, token.refreshToken);
     delete user.hash;
     delete user.hashRt;
@@ -93,6 +96,7 @@ export class AuthService {
         hashRt: null,
       },
     });
+    return {status: HttpStatus.OK}
   }
 
   async refreshToken(userId: number, rt: string) {
